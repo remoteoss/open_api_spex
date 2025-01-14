@@ -153,6 +153,25 @@ defmodule OpenApiSpex.SchemaResolverTest do
               }
             }
           }
+        },
+        "/api/credit-cards" => %PathItem{
+          post: %Operation{
+            description: "Add a new credit card number",
+            operationId: "CreditCardController.create",
+            requestBody: %RequestBody{
+              required: true,
+              content: %{
+                "application/json" => %MediaType{
+                  schema: {OpenApiSpexTest.Schemas.FuncRefs, :credit_card_number}
+                }
+              }
+            },
+            responses: %{
+              201 => %Response{
+                description: "Number added"
+              }
+            }
+          }
         }
       }
     }
@@ -188,7 +207,8 @@ defmodule OpenApiSpex.SchemaResolverTest do
              "DirectDebitPaymentDetails" => %Schema{},
              "PetAppointmentRequest" => %Schema{},
              "TrainingAppointment" => %Schema{},
-             "GroomingAppointment" => %Schema{}
+             "GroomingAppointment" => %Schema{},
+             "CreditCardNumber" => %Schema{}
            } = resolved.components.schemas
 
     get_friends = resolved.paths["/api/users/{id}/friends"].get

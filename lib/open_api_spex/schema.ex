@@ -263,6 +263,8 @@ defmodule OpenApiSpex.Schema do
   """
   @type data_type :: :string | :number | :integer | :boolean | :array | :object
 
+  @type func_ref :: {module, atom}
+
   @typedoc """
   Global schemas lookup by name.
   """
@@ -363,7 +365,7 @@ defmodule OpenApiSpex.Schema do
         assert ...
       end
   """
-  @spec example(schema :: Schema.t() | module | Reference.t()) ::
+  @spec example(schema :: Schema.t() | module | Reference.t(), func_ref) ::
           map | String.t() | number | boolean
   def example(%Schema{example: example} = schema) when not is_nil(example) do
     schema.example
@@ -423,6 +425,10 @@ defmodule OpenApiSpex.Schema do
   def example(%Schema{type: :number} = s), do: example_for(s, :number)
   def example(%Schema{type: :boolean}), do: false
   def example(schema_module) when is_atom(schema_module), do: example(schema_module.schema())
+
+  def example({module, function}) when is_atom(module) and is_atom(function),
+    do: example(apply(module, function, []))
+
   def example(_schema), do: nil
 
   @doc """
@@ -518,6 +524,10 @@ defmodule OpenApiSpex.Schema do
   end
 
   defp default(schema_module) when is_atom(schema_module), do: schema_module.schema().default
+
+  defp default({module, function}) when is_atom(module) and is_atom(function),
+    do: apply(module, function, []).default
+
   defp default(%{default: default}), do: default
   defp default(%Reference{}), do: nil
 

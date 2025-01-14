@@ -3,6 +3,12 @@ defmodule OpenApiSpexTest.Schemas do
   alias OpenApiSpex.Reference
   alias OpenApiSpex.Schema
 
+  defmodule FuncRefs do
+    def credit_card_number do
+      %Schema{title: "CreditCardNumber", type: :string, description: "Credit card number"}
+    end
+  end
+
   defmodule Helper do
     def prepare_struct([%Reference{"$ref": "#/components/schemas/" <> name} | tail]) do
       schema =
@@ -234,7 +240,7 @@ defmodule OpenApiSpexTest.Schemas do
       description: "Payment details when using credit-card method",
       type: :object,
       properties: %{
-        credit_card_number: %Schema{type: :string, description: "Credit card number"},
+        credit_card_number: {OpenApiSpexTest.Schemas.FuncRefs, :credit_card_number},
         name_on_card: %Schema{type: :string, description: "Name as appears on card"},
         expiry: %Schema{type: :string, description: "4 digit expiry MMYY"}
       },

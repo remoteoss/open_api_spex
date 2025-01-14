@@ -65,7 +65,7 @@ defmodule OpenApiSpex.Parameter do
           style: style | nil,
           explode: boolean | nil,
           allowReserved: boolean | nil,
-          schema: Schema.t() | Reference.t() | atom | nil,
+          schema: Schema.t() | Reference.t() | atom | Schema.func_ref() | nil,
           example: any,
           examples: %{String.t() => Example.t() | Reference.t()} | nil,
           content: %{String.t() => MediaType.t()} | nil,
@@ -78,7 +78,7 @@ defmodule OpenApiSpex.Parameter do
   @doc """
   Sets the schema for a parameter from a simple type, reference or Schema
   """
-  @spec put_schema(t, Reference.t() | Schema.t() | type) :: t
+  @spec put_schema(t, Reference.t() | Schema.t() | Schema.func_ref() | type) :: t
   def put_schema(parameter = %Parameter{}, type = %Reference{}) do
     %{parameter | schema: type}
   end
@@ -93,6 +93,11 @@ defmodule OpenApiSpex.Parameter do
   end
 
   def put_schema(parameter = %Parameter{}, type) when is_atom(type) do
+    %{parameter | schema: type}
+  end
+
+  def put_schema(parameter = %Parameter{}, {module, function} = type)
+      when is_atom(module) and is_atom(function) do
     %{parameter | schema: type}
   end
 
