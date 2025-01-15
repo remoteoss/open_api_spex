@@ -198,17 +198,7 @@ defmodule OpenApiSpex.SchemaResolver do
   end
 
   defp resolve_schema_modules_from_schema(schema, schemas) when is_atom(schema) do
-    title = schema.schema().title
-
-    new_schemas =
-      if Map.has_key?(schemas, title) do
-        schemas
-      else
-        {new_schema, schemas} = resolve_schema_modules_from_schema(schema.schema(), schemas)
-        Map.put(schemas, title, new_schema)
-      end
-
-    {%Reference{"$ref": "#/components/schemas/#{title}"}, new_schemas}
+    resolve_schema_modules_from_schema({schema, :schema}, schemas)
   end
 
   defp resolve_schema_modules_from_schema({module, func}, schemas)
