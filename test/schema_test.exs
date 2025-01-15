@@ -268,6 +268,24 @@ defmodule OpenApiSpex.SchemaTest do
 
       assert Schema.example(Foo) == %{bar: %{baz: 2}, foo: "1"}
     end
+
+    test "example for func_ref" do
+      defmodule Baz do
+        def baz do
+          %OpenApiSpex.Schema{
+            type: :object,
+            properties: %{
+              foo: %Schema{
+                type: :string,
+                example: "42"
+              }
+            }
+          }
+        end
+      end
+
+      assert Schema.example({Baz, :baz}) == %{foo: "42"}
+    end
   end
 
   describe "example/2" do

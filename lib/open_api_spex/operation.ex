@@ -102,18 +102,32 @@ defmodule OpenApiSpex.Operation do
         required: false,
         schema: %OpenApiSpex.Schema{enum: ["pending", "in_progress", "completed"], type: :string}
       }
+
+      iex> Operation.parameter(
+      ...>   :status,
+      ...>   :query,
+      ...>   {Schemas, :entity_status},
+      ...>   "The status of an entity"
+      ...> )
+      %OpenApiSpex.Parameter{
+        name: :status,
+        in: :query,
+        description: "The status of an entity",
+        required: false,
+        schema: {Schemas, :entity_status}
+      }
   """
   @spec parameter(
           name :: atom,
           location :: Parameter.location(),
-          type :: Reference.t() | Schema.t() | Parameter.type() | atom(),
+          type :: Reference.t() | Schema.t() | Parameter.type() | atom() | Schema.func_ref(),
           description :: String.t(),
           opts :: keyword
         ) :: Parameter.t()
   def parameter(name, location, type, description, opts \\ [])
       when is_atom(name) and
              is_atom(location) and
-             (is_map(type) or is_atom(type)) and
+             (is_map(type) or is_atom(type) or is_tuple(type)) and
              is_binary(description) and
              is_list(opts) do
     params =
