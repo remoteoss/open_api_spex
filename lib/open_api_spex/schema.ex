@@ -233,13 +233,13 @@ defmodule OpenApiSpex.Schema do
           required: [atom] | nil,
           enum: [any] | nil,
           type: data_type | nil,
-          allOf: [Schema.t() | Reference.t() | module] | nil,
-          oneOf: [Schema.t() | Reference.t() | module] | nil,
-          anyOf: [Schema.t() | Reference.t() | module] | nil,
-          not: Schema.t() | Reference.t() | module | nil,
-          items: Schema.t() | Reference.t() | module | nil,
-          properties: %{atom => Schema.t() | Reference.t() | module} | nil,
-          additionalProperties: boolean | Schema.t() | Reference.t() | module | nil,
+          allOf: [schema_reference()] | nil,
+          oneOf: [schema_reference()] | nil,
+          anyOf: [schema_reference()] | nil,
+          not: schema_reference() | nil,
+          items: schema_reference() | nil,
+          properties: %{atom => schema_reference()} | nil,
+          additionalProperties: boolean | schema_reference() | nil,
           description: String.t() | nil,
           format: String.t() | atom | nil,
           default: any,
@@ -264,6 +264,8 @@ defmodule OpenApiSpex.Schema do
   @type data_type :: :string | :number | :integer | :boolean | :array | :object
 
   @type func_ref :: {module, atom}
+
+  @type schema_reference :: Schema.t() | module | Reference.t() | func_ref
 
   @typedoc """
   Global schemas lookup by name.
@@ -365,7 +367,7 @@ defmodule OpenApiSpex.Schema do
         assert ...
       end
   """
-  @spec example(schema :: Schema.t() | module | Reference.t(), func_ref) ::
+  @spec example(schema :: schema_reference()) ::
           map | String.t() | number | boolean
   def example(%Schema{example: example} = schema) when not is_nil(example) do
     schema.example

@@ -398,7 +398,7 @@ defmodule OpenApiSpex do
   @doc """
   Resolve a schema or reference to a schema.
   """
-  @spec resolve_schema(Schema.t() | Reference.t() | module, Components.schemas_map()) ::
+  @spec resolve_schema(Schema.schema_reference(), Components.schemas_map()) ::
           Schema.t() | nil
   def resolve_schema(%Schema{} = schema, _), do: schema
   def resolve_schema(%Reference{} = ref, schemas), do: Reference.resolve_schema(ref, schemas)

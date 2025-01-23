@@ -145,7 +145,7 @@ defmodule OpenApiSpex.Operation do
   @spec request_body(
           description :: String.t(),
           media_type :: String.t() | %{String.t() => Keyword.t() | MediaType.t()},
-          schema_ref :: Schema.t() | Reference.t() | module,
+          schema_ref :: Schema.schema_reference(),
           opts :: keyword
         ) :: RequestBody.t()
   def request_body(description, media_type, schema_ref, opts \\ []) do
@@ -173,7 +173,7 @@ defmodule OpenApiSpex.Operation do
   @spec response(
           description :: String.t(),
           media_type :: String.t() | %{String.t() => Keyword.t() | MediaType.t()} | nil,
-          schema_ref :: Schema.t() | Reference.t() | module | nil,
+          schema_ref :: Schema.schema_reference() | nil,
           opts :: keyword
         ) :: Response.t()
   def response(description, media_type, schema_ref, opts \\ []) do
