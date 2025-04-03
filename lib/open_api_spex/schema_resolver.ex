@@ -297,6 +297,12 @@ defmodule OpenApiSpex.SchemaResolver do
 
           {{key, path}, schemas}
 
+        {key, {module, function}}, schemas when is_atom(module) and is_atom(function) ->
+          {%Reference{"$ref": path}, schemas} =
+            resolve_schema_modules_from_schema({module, function}, schemas)
+
+          {{key, path}, schemas}
+
         {key, path}, schemas ->
           {{key, path}, schemas}
       end)

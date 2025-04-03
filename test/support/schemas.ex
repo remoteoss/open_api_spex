@@ -639,6 +639,27 @@ defmodule OpenApiSpexTest.Schemas do
     })
   end
 
+  def nail_clipping_appointment do
+    %OpenApiSpex.Schema{
+      title: "NailClippingAppointment",
+      description: "Request for a nail clipping appointment",
+      type: :object,
+      allOf: [
+        AppointmentType,
+        %Schema{
+          type: :object,
+          properties: %{
+            length: %Schema{
+              description: "Length in mm of nails",
+              type: :integer
+            }
+          },
+          required: [:length]
+        }
+      ]
+    }
+  end
+
   defmodule PetAppointmentRequest do
     OpenApiSpex.schema(%{
       title: "PetAppointmentRequest",
@@ -652,7 +673,8 @@ defmodule OpenApiSpexTest.Schemas do
         propertyName: "appointment_type",
         mapping: %{
           "training" => TrainingAppointment,
-          "grooming" => GroomingAppointment
+          "grooming" => GroomingAppointment,
+          "nail_clipping" => {OpenApiSpexTest.Schemas, :nail_clipping_appointment}
         }
       }
     })

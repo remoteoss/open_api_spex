@@ -197,6 +197,11 @@ defmodule OpenApiSpex.SchemaResolverTest do
                "grooming"
              ]
 
+    assert "#/components/schemas/NailClippingAppointment" =
+             resolved.components.schemas["PetAppointmentRequest"].discriminator.mapping[
+               "nail_clipping"
+             ]
+
     assert %{
              "UserRequest" => %Schema{},
              "UserResponse" => %Schema{},
