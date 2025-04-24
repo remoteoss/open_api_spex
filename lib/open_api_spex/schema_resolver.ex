@@ -204,7 +204,7 @@ defmodule OpenApiSpex.SchemaResolver do
   defp resolve_schema_modules_from_schema({module, func}, schemas)
        when is_atom(module) and is_atom(func) do
     schema = apply(module, func, [])
-    title = schema.title
+    title = schema.title || raise "title must be defined on #{module}.#{func}/0"
 
     new_schemas =
       if Map.has_key?(schemas, title) do
