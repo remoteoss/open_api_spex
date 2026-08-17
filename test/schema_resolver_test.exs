@@ -415,4 +415,87 @@ defmodule OpenApiSpex.SchemaResolverTest do
              }
     end
   end
+
+  describe "titled schemas embedded inline" do
+    defmodule InlineSlug do
+      def schema do
+        %Schema{type: :string, title: "InlineSlug", format: :uuid}
+      end
+    end
+
+    defmodule InlineInner do
+      def schema do
+        %Schema{type: :object, title: "InlineInner", properties: %{slug: InlineSlug}}
+      end
+    end
+
+    defmodule InlineViaFunction do
+      def inner,
+        do: %Schema{
+          type: :object,
+          title: "InlineViaFunction.Inner",
+          properties: %{slug: InlineSlug}
+        }
+    end
+
+    @empty_spec %OpenApi{
+      info: %Info{title: "Test", version: "1.0.0"},
+      paths: %{},
+      components: %{schemas: %{}}
+    }
+
+    test "resolves nested schema modules of a titled schema embedded as a struct" do
+      # The wrapper embeds the %Schema{} struct itself rather than referencing the module,
+      # so InlineInner is registered while being resolved rather than via the module clause.
+      wrapper = %Schema{
+        type: :object,
+        title: "InlineWrapper",
+        properties: %{inner: InlineInner.schema()}
+      }
+
+      spec = SchemaResolver.add_schemas(@empty_spec, [wrapper])
+
+      assert %{"InlineInner" => inner} = spec.components.schemas
+
+      assert inner.properties.slug == %Reference{"$ref": "#/components/schemas/InlineSlug"},
+             "components.schemas kept the pre-resolution copy of InlineInner"
+
+      assert Map.has_key?(spec.components.schemas, "InlineSlug")
+    end
+
+    test "resolves nested schema modules of a titled schema returned by a plain function" do
+      wrapper = %Schema{
+        type: :object,
+        title: "InlineWrapperViaFunction",
+        properties: %{inner: InlineViaFunction.inner()}
+      }
+
+      spec = SchemaResolver.add_schemas(@empty_spec, [wrapper])
+
+      assert %{"InlineViaFunction.Inner" => inner} = spec.components.schemas
+      assert inner.properties.slug == %Reference{"$ref": "#/components/schemas/InlineSlug"}
+    end
+
+    test "resolving twice is a no-op once nested modules are resolved" do
+      wrapper = %Schema{
+        type: :object,
+        title: "InlineWrapperIdempotent",
+        properties: %{inner: InlineInner.schema()}
+      }
+
+      once =
+        SchemaResolver.add_schemas(
+          %OpenApi{
+            info: %Info{title: "Test", version: "1.0.0"},
+            paths: %{},
+            components: %OpenApiSpex.Components{schemas: %{}}
+          },
+          [wrapper]
+        )
+
+      twice = SchemaResolver.resolve_schema_modules(once)
+
+      assert once.components.schemas == twice.components.schemas
+    end
+  end
 end

@@ -229,6 +229,8 @@ defmodule OpenApiSpex.SchemaResolver do
   end
 
   defp resolve_schema_modules_from_schema(schema = %Schema{title: title}, schemas) do
+    # Registered before resolving children so that a self-referencing schema terminates.
+    # This copy is still unresolved; it gets replaced below.
     schemas =
       if is_nil(title) do
         schemas
@@ -261,6 +263,12 @@ defmodule OpenApiSpex.SchemaResolver do
         properties: properties,
         discriminator: discriminator
     }
+
+    # Replace the placeholder registered above with the resolved schema. Without this,
+    # `components.schemas[title]` keeps the pre-resolution copy — nested schema modules
+    # left as bare atoms or {module, function} tuples — and anything that looks the schema
+    # up by title (Cast, TestAssertions.assert_schema/3) then fails on those raw values.
+    schemas = if is_nil(title), do: schemas, else: Map.put(schemas, title, schema)
 
     {schema, schemas}
   end
