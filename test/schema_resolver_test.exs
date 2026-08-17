@@ -498,4 +498,105 @@ defmodule OpenApiSpex.SchemaResolverTest do
       assert once.components.schemas == twice.components.schemas
     end
   end
+
+  describe "titled inline schemas are stored fully resolved in components.schemas" do
+    defmodule LeafSchema do
+      def schema do
+        %Schema{title: "Leaf", type: :string}
+      end
+    end
+
+    test "nested titled inline schema in a components entry has its module atoms resolved" do
+      spec = %OpenApi{
+        info: %Info{title: "Test", version: "1.0.0"},
+        paths: %{},
+        components: %OpenApiSpex.Components{
+          schemas: %{
+            "Root" => %Schema{
+              title: "Root",
+              type: :object,
+              properties: %{
+                child: %Schema{
+                  title: "AChild",
+                  type: :object,
+                  properties: %{leaf: LeafSchema}
+                }
+              }
+            }
+          }
+        }
+      }
+
+      resolved = SchemaResolver.resolve_schema_modules(spec)
+
+      assert %Schema{properties: %{leaf: %Reference{"$ref": "#/components/schemas/Leaf"}}} =
+               resolved.components.schemas["AChild"]
+
+      assert {:ok, %{leaf: "x"}} =
+               OpenApiSpex.Cast.cast(
+                 resolved.components.schemas["AChild"],
+                 %{"leaf" => "x"},
+                 resolved.components.schemas
+               )
+    end
+
+    defmodule DoublyNestedParent do
+      # Inner title ("AInner") iterates before outer title ("ZOuter") in the
+      # components map, so the second resolver sweep heals "AInner" first and
+      # then re-encounters its raw copy while resolving "ZOuter".
+      def schema do
+        %Schema{
+          title: "Parent",
+          type: :object,
+          properties: %{
+            outer: %Schema{
+              title: "ZOuter",
+              type: :object,
+              properties: %{
+                inner: %Schema{
+                  title: "AInner",
+                  type: :object,
+                  properties: %{leaf: LeafSchema}
+                }
+              }
+            }
+          }
+        }
+      end
+    end
+
+    test "doubly nested titled inline schema resolved via paths stays resolved" do
+      spec = %OpenApi{
+        info: %Info{title: "Test", version: "1.0.0"},
+        paths: %{
+          "/things" => %PathItem{
+            get: %Operation{
+              operationId: "ThingController.show",
+              responses: %{
+                200 => %Response{
+                  description: "Success",
+                  content: %{
+                    "application/json" => %MediaType{schema: DoublyNestedParent}
+                  }
+                }
+              }
+            }
+          }
+        },
+        components: %OpenApiSpex.Components{schemas: %{}}
+      }
+
+      resolved = SchemaResolver.resolve_schema_modules(spec)
+
+      assert %Schema{properties: %{leaf: %Reference{"$ref": "#/components/schemas/Leaf"}}} =
+               resolved.components.schemas["AInner"]
+
+      assert {:ok, %{leaf: "x"}} =
+               OpenApiSpex.Cast.cast(
+                 resolved.components.schemas["AInner"],
+                 %{"leaf" => "x"},
+                 resolved.components.schemas
+               )
+    end
+  end
 end
