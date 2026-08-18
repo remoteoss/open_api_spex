@@ -1,6 +1,4 @@
 defimpl Inspect, for: OpenApiSpex.Schema do
-  import Inspect.Algebra
-
   def inspect(parameter, opts) do
     map =
       parameter
@@ -11,9 +9,21 @@ defimpl Inspect, for: OpenApiSpex.Schema do
       end)
       |> Map.new()
 
-    # Note: We cannot use Inspect.Map.inspect/4 or Inspect.Map.inspect_as_struct/5
-    # because they are private functions in the Inspect.Map module and not part of
-    # the public API. Instead, we use Inspect.Algebra functions (concat, to_doc).
-    concat(["#OpenApiSpex.Schema<", to_doc(map, opts), ">"])
+    infos =
+      for %{field: field} = info <- OpenApiSpex.Schema.__info__(:struct),
+          Map.has_key?(map, field),
+          do: info
+
+    do_inspect(map, "OpenApiSpex.Schema", infos, opts)
+  end
+
+  if Version.compare(System.version(), "1.19.0") in [:gt, :eq] do
+    defp do_inspect(map, schema_mod, infos, opts) do
+      Inspect.Map.inspect_as_struct(map, schema_mod, infos, opts)
+    end
+  else
+    defp do_inspect(map, schema_mod, infos, opts) do
+      Inspect.Map.inspect(map, schema_mod, infos, opts)
+    end
   end
 end
